@@ -44,6 +44,19 @@ npm run typecheck
 npm run verify
 ```
 
+## GitHub Pages
+
+For repository Pages deployment, the project now includes a GitHub Actions workflow that builds with the correct repository base path.
+
+Required repository setting:
+
+- GitHub repository `Settings -> Pages -> Build and deployment -> Source`
+- select `GitHub Actions`
+
+After that, every push to `main` deploys the production bundle to:
+
+- [https://ustselemov.github.io/mobile-mockup-editor-drawio/](https://ustselemov.github.io/mobile-mockup-editor-drawio/)
+
 ## Key documentation
 
 - [MVP1 Audit Final Report](./docs/audit/mvp1_final_acceptance_report.md)
