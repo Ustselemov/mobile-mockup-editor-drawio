@@ -1,0 +1,17 @@
+export type {
+  BaseNode,
+  BoardModel,
+  ButtonNode,
+  CheckboxNode,
+  EditorDocument,
+  EditorEdge,
+  EditorNode,
+  FlowLaneNode,
+  NodeId,
+  NodeType,
+  PaletteItemType,
+  ParentId,
+  ScreenNode,
+  TextNode,
+  TextStyle,
+} from "@/lib/model/document";

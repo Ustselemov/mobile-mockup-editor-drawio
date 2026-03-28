@@ -1,0 +1,373 @@
+{
+  "source_file": "one-click-flow-sketch.drawio",
+  "counts": {
+    "mxCell_total": 275,
+    "vertex_total": 261,
+    "text_nodes": 133,
+    "edge_nodes": 12,
+    "swimlanes": 6,
+    "clouds": 1,
+    "screen_frames": 9
+  },
+  "observed_style_keys": [
+    "align",
+    "arcSize",
+    "collapsible",
+    "connectable",
+    "container",
+    "dropTarget",
+    "edgeStyle",
+    "endArrow",
+    "endFill",
+    "entryDx",
+    "entryDy",
+    "entryX",
+    "entryY",
+    "exitDx",
+    "exitDy",
+    "exitX",
+    "exitY",
+    "fillColor",
+    "fontStyle",
+    "horizontal",
+    "html",
+    "jettySize",
+    "orthogonalLoop",
+    "rounded",
+    "shape",
+    "startArrow",
+    "startSize",
+    "strokeColor",
+    "strokeWidth",
+    "swimlane",
+    "text",
+    "verticalAlign",
+    "whiteSpace"
+  ],
+  "defaults": {
+    "fontFamily": "Helvetica, Arial, sans-serif",
+    "lineHeight": 1.2,
+    "gridSize": 10
+  },
+  "color_tokens": [
+    {
+      "token": "screenStroke",
+      "hex": "#1c2a30",
+      "purpose": "рамка экрана/главного контейнера",
+      "exampleId": "c17"
+    },
+    {
+      "token": "neutralBorder",
+      "hex": "#d7e1e3",
+      "purpose": "основная нейтральная граница карточек/полей",
+      "exampleId": "c21"
+    },
+    {
+      "token": "surface",
+      "hex": "#ffffff",
+      "purpose": "базовая поверхность",
+      "exampleId": "c17"
+    },
+    {
+      "token": "surfaceMuted",
+      "hex": "#f7fafb",
+      "purpose": "поля, вторичные карточки, soft background",
+      "exampleId": "c21"
+    },
+    {
+      "token": "headerTint",
+      "hex": "#eef5f4",
+      "purpose": "плашка заголовка",
+      "exampleId": "c18"
+    },
+    {
+      "token": "interactiveFill",
+      "hex": "#dcefeb",
+      "purpose": "активный сегмент/выделение",
+      "exampleId": "c48"
+    },
+    {
+      "token": "interactiveStroke",
+      "hex": "#0f766e",
+      "purpose": "акцентная граница/чекбокс/интерактив",
+      "exampleId": "c44"
+    },
+    {
+      "token": "successFill",
+      "hex": "#d5e8d4",
+      "purpose": "primary CTA success-style",
+      "exampleId": "c88"
+    },
+    {
+      "token": "successStroke",
+      "hex": "#82b366",
+      "purpose": "граница primary CTA",
+      "exampleId": "c88"
+    },
+    {
+      "token": "badgeFill",
+      "hex": "#dae8fc",
+      "purpose": "badge/PDF/bonus pill",
+      "exampleId": "c109"
+    },
+    {
+      "token": "badgeStroke",
+      "hex": "#6c8ebf",
+      "purpose": "граница badge/PDF",
+      "exampleId": "c109"
+    },
+    {
+      "token": "placeholderFill",
+      "hex": "#e3ebed",
+      "purpose": "скелетоны/placeholder bars",
+      "exampleId": "c351"
+    },
+    {
+      "token": "warningFill",
+      "hex": "#ffe6cc",
+      "purpose": "warning/info banner",
+      "exampleId": "c245"
+    },
+    {
+      "token": "warningStroke",
+      "hex": "#d79b00",
+      "purpose": "граница warning banner",
+      "exampleId": "c245"
+    },
+    {
+      "token": "noteFill",
+      "hex": "#fffaf0",
+      "purpose": "облако-комментарий",
+      "exampleId": "c5"
+    },
+    {
+      "token": "noteStroke",
+      "hex": "#c49102",
+      "purpose": "граница облака",
+      "exampleId": "c5"
+    },
+    {
+      "token": "noteCardBorder",
+      "hex": "#d7d0bc",
+      "purpose": "внутренние карточки в облаке",
+      "exampleId": "c6"
+    }
+  ],
+  "typography_tokens": [
+    {
+      "token": "displayTitle",
+      "spec": "14px / 700 / center / #1f2b2d",
+      "purpose": "название экрана или сценария",
+      "examples": "c15, c174"
+    },
+    {
+      "token": "sectionTitle",
+      "spec": "10px / 700 / left / #66757a",
+      "purpose": "заголовок секции",
+      "examples": "c28, c54, c62"
+    },
+    {
+      "token": "fieldLabel",
+      "spec": "9px / 700 / left / #66757a",
+      "purpose": "label поля",
+      "examples": "c22, c25, c74"
+    },
+    {
+      "token": "body",
+      "spec": "11px / 400 / left / #1f2b2d",
+      "purpose": "значение поля / основной текст",
+      "examples": "c23, c31"
+    },
+    {
+      "token": "bodyStrong",
+      "spec": "11px / 700 / left / #1f2b2d",
+      "purpose": "название позиции, акцентный текст",
+      "examples": "c30, c35"
+    },
+    {
+      "token": "cta",
+      "spec": "11px / 700 / center / #1f2b2d",
+      "purpose": "кнопка",
+      "examples": "c88, c48"
+    },
+    {
+      "token": "mutedCenter",
+      "spec": "11px / 400 / center / #66757a",
+      "purpose": "подписи в статусных чипах",
+      "examples": "c4"
+    },
+    {
+      "token": "successText",
+      "spec": "9–11px / 400–700 / #0f766e",
+      "purpose": "бонусы, интерактив, успех",
+      "examples": "c33, c56"
+    },
+    {
+      "token": "dangerText",
+      "spec": "10px / 700 / #c2410c",
+      "purpose": "удаление/опасное действие",
+      "examples": "c110"
+    },
+    {
+      "token": "warningText",
+      "spec": "11px / 400 / #6f4b18",
+      "purpose": "warning subtitle",
+      "examples": "c247"
+    }
+  ],
+  "radius_tokens": [
+    {
+      "token": "r-xs",
+      "arcSize": "6",
+      "purpose": "checkbox, skeleton, small pill",
+      "examples": "c44, c351"
+    },
+    {
+      "token": "r-sm",
+      "arcSize": "8",
+      "purpose": "внутренние note cards",
+      "examples": "c6"
+    },
+    {
+      "token": "r-md",
+      "arcSize": "9",
+      "purpose": "badge/status",
+      "examples": "c109, c333"
+    },
+    {
+      "token": "r-lg",
+      "arcSize": "10",
+      "purpose": "field/card small",
+      "examples": "c21"
+    },
+    {
+      "token": "r-xl",
+      "arcSize": "12",
+      "purpose": "segmented options / chips",
+      "examples": "c48"
+    },
+    {
+      "token": "r-2xl",
+      "arcSize": "14",
+      "purpose": "screen, main card, primary buttons",
+      "examples": "c17, c27, c88"
+    },
+    {
+      "token": "r-3xl",
+      "arcSize": "16",
+      "purpose": "banner / wide special container",
+      "examples": "c208, c245"
+    }
+  ],
+  "screen_frames": [
+    {
+      "id": "c17",
+      "parent": "c2",
+      "title": "Оформление заказа",
+      "subtitle": null,
+      "x": 416.0,
+      "y": 47.0,
+      "width": 392.0,
+      "height": 1088.0,
+      "children": 19
+    },
+    {
+      "id": "ZD1CV1WOafDuuiwsY5MV-4",
+      "parent": "c2",
+      "title": "Выбор МЦ",
+      "subtitle": null,
+      "x": 856.0,
+      "y": 58.0,
+      "width": 332.0,
+      "height": 536.0,
+      "children": 14
+    },
+    {
+      "id": "c97",
+      "parent": "c92",
+      "title": "Корзина",
+      "subtitle": null,
+      "x": 66.0,
+      "y": 66.0,
+      "width": 364.0,
+      "height": 786.0,
+      "children": 10
+    },
+    {
+      "id": "c156",
+      "parent": "c145",
+      "title": null,
+      "subtitle": null,
+      "x": 120.0,
+      "y": 666.0,
+      "width": 326.0,
+      "height": 334.0,
+      "children": 5
+    },
+    {
+      "id": "c176",
+      "parent": "c145",
+      "title": "Успешная оплата",
+      "subtitle": null,
+      "x": 510.0,
+      "y": 76.0,
+      "width": 364.0,
+      "height": 744.0,
+      "children": 26
+    },
+    {
+      "id": "c244",
+      "parent": "c212",
+      "title": "Заказ ожидает оплаты",
+      "subtitle": "Оплата при посещении МЦ",
+      "x": 110.0,
+      "y": 68.0,
+      "width": 364.0,
+      "height": 730.0,
+      "children": 22
+    },
+    {
+      "id": "c310",
+      "parent": "c271",
+      "title": "Авторизация",
+      "subtitle": "Если пользователь не вошел",
+      "x": 256.0,
+      "y": 52.0,
+      "width": 332.0,
+      "height": 404.0,
+      "children": 3
+    },
+    {
+      "id": "c329",
+      "parent": "c271",
+      "title": "Заказ / результаты",
+      "subtitle": null,
+      "x": 746.0,
+      "y": 52.0,
+      "width": 346.0,
+      "height": 458.0,
+      "children": 14
+    },
+    {
+      "id": "c349",
+      "parent": "c271",
+      "title": "Файл результата",
+      "subtitle": "Просмотр PDF",
+      "x": 1246.0,
+      "y": 42.0,
+      "width": 292.0,
+      "height": 424.0,
+      "children": 12
+    }
+  ],
+  "representative_xml": {
+    "c17": "<mxCell id=\"c17\" parent=\"c2\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1c2a30;arcSize=14;container=1;collapsible=0;dropTarget=1;connectable=0;\" value=\"\" vertex=\"1\">\n          <mxGeometry height=\"1088\" width=\"392\" x=\"416\" y=\"47\" as=\"geometry\" />\n        </mxCell>\n        ",
+    "c21": "<mxCell id=\"c21\" parent=\"c17\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#f7fafb;strokeColor=#d7e1e3;arcSize=10;container=1;collapsible=0;dropTarget=1;connectable=0;\" value=\"\" vertex=\"1\">\n          <mxGeometry height=\"42\" width=\"171\" x=\"14\" y=\"88\" as=\"geometry\" />\n        </mxCell>\n        ",
+    "c44": "<mxCell id=\"c44\" parent=\"c17\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0f766e;arcSize=6;\" value=\"\" vertex=\"1\">\n          <mxGeometry height=\"16\" width=\"16\" x=\"14\" y=\"364\" as=\"geometry\" />\n        </mxCell>\n        ",
+    "c48": "<mxCell id=\"c48\" parent=\"c46\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#dcefeb;strokeColor=#0f766e;arcSize=12;\" value=\"&lt;div style=&quot;font-size:11px;font-family:Helvetica,Arial,sans-serif;color:#1f2b2d;text-align:center;line-height:1.2;font-weight:700;white-space:normal;&quot;&gt;В МЦ&lt;/div&gt;\" vertex=\"1\">\n          <mxGeometry height=\"28\" width=\"108\" x=\"10\" y=\"28\" as=\"geometry\" />\n        </mxCell>\n        ",
+    "c88": "<mxCell id=\"c88\" parent=\"c17\" style=\"rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=14;\" value=\"&lt;div style=&quot;font-size:11px;font-family:Helvetica,Arial,sans-serif;color:#1f2b2d;text-align:center;line-height:1.2;font-weight:700;white-space:normal;&quot;&gt;Перейти к оплате&lt;/div&gt;\" vertex=\"1\">\n          <mxGeometry height=\"34\" width=\"246\" x=\"132\" y=\"1012\" as=\"geometry\" />\n        </mxCell>\n        ",
+    "c5": "<mxCell id=\"c5\" parent=\"c2\" style=\"shape=cloud;whiteSpace=wrap;html=1;fillColor=#fffaf0;strokeColor=#c49102;container=1;collapsible=0;dropTarget=1;connectable=0;\" value=\"\" vertex=\"1\">\n          <mxGeometry height=\"218\" width=\"362\" x=\"28\" y=\"66\" as=\"geometry\" />\n        </mxCell>\n        ",
+    "e346": "<mxCell id=\"e346\" edge=\"1\" parent=\"c271\" style=\"edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=5;strokeColor=#000000;endArrow=classic;endFill=1;\">\n          <mxGeometry relative=\"1\" as=\"geometry\">\n            <mxPoint x=\"596\" y=\"240\" as=\"sourcePoint\" />\n            <mxPoint x=\"746\" y=\"240\" as=\"targetPoint\" />\n          </mxGeometry>\n        </mxCell>\n        ",
+    "c2": "<mxCell id=\"c2\" parent=\"1\" style=\"swimlane;horizontal=0;whiteSpace=wrap;html=1;startSize=34;\" value=\"1. Чекаут\" vertex=\"1\">\n          <mxGeometry height=\"1172\" width=\"1256\" x=\"64\" y=\"54\" as=\"geometry\" />\n        </mxCell>\n        "
+  }
+}
