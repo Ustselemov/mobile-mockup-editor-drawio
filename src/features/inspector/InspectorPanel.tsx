@@ -103,6 +103,7 @@ export function InspectorPanel() {
   const selectedNode = useSelectedNode();
   const document = useEditorStore((state) => state.document);
   const updateNode = useEditorStore((state) => state.updateNode);
+  const reparentNode = useEditorStore((state) => state.reparentNode);
   const toggleNodeVisibility = useEditorStore((state) => state.toggleNodeVisibility);
   const toggleNodeLock = useEditorStore((state) => state.toggleNodeLock);
   const reorderNode = useEditorStore((state) => state.reorderNode);
@@ -190,6 +191,14 @@ export function InspectorPanel() {
                 Parent {selectedNode.parentId}
               </div>
             </div>
+            {selectedNode.parentId !== "board" ? (
+              <div className="inspector-parent-actions">
+                <strong>Attached to {selectedNode.parentId}</strong>
+                <button type="button" onClick={() => reparentNode(selectedNode.id, "board")}>
+                  Move to board
+                </button>
+              </div>
+            ) : null}
             <div className="inspector-grid">
               <NumberField label="X" value={selectedNode.x} onChange={(x) => updateNode(selectedNode.id, { x })} />
               <NumberField label="Y" value={selectedNode.y} onChange={(y) => updateNode(selectedNode.id, { y })} />

@@ -17,7 +17,9 @@ test("compiles DSL from the lower panel into an editable screen", async ({ page 
   await page.goto("/");
   await expect(page.locator(".app-shell")).toBeVisible();
 
-  const panel = page.getByLabel("DSL panel");
+  await page.getByRole("button", { name: "Show DSL panel" }).click();
+
+  const panel = page.getByRole("region", { name: "DSL panel" });
   await expect(panel).toBeVisible();
 
   const source = panel.locator("textarea");
@@ -39,4 +41,3 @@ screen Checkout preset:iphone15
   expect(document.nodes[screenId]?.children.length).toBeGreaterThan(0);
   await expect(page.getByText("Generated DSL document")).toBeVisible();
 });
-

@@ -8,6 +8,7 @@ type StoredNode = {
   y: number;
   width: number;
   height: number;
+  metadata?: Record<string, unknown>;
 };
 
 type StoredDocument = {
@@ -17,6 +18,7 @@ type StoredDocument = {
     panY: number;
   };
   nodes: Record<string, StoredNode>;
+  edges?: Record<string, unknown>;
 };
 
 const LOCAL_STORAGE_KEY = "codex-mobile-mockup-editor";
@@ -191,6 +193,52 @@ async function selectNode(page: Page, nodeId: string) {
   );
 }
 
+async function addNodeToSelection(page: Page, nodeId: string) {
+  const node = getNodeLocator(page, nodeId);
+  const box = await node.boundingBox();
+  if (!box) {
+    throw new Error(`Node ${nodeId} bounding box is not available.`);
+  }
+
+  const clientX = box.x + Math.min(20, box.width / 2);
+  const clientY = box.y + Math.min(20, box.height / 2);
+
+  await node.dispatchEvent("pointerdown", {
+    bubbles: true,
+    button: 0,
+    buttons: 1,
+    clientX,
+    clientY,
+    pointerId: 1,
+    pointerType: "mouse",
+    isPrimary: true,
+    shiftKey: true,
+  });
+  await page.evaluate(
+    ({ x, y }) => {
+      window.dispatchEvent(
+        new PointerEvent("pointerup", {
+          bubbles: true,
+          button: 0,
+          buttons: 0,
+          clientX: x,
+          clientY: y,
+          pointerId: 1,
+          pointerType: "mouse",
+          isPrimary: true,
+          shiftKey: true,
+        }),
+      );
+    },
+    { x: clientX, y: clientY },
+  );
+}
+
+async function loadDemo(page: Page) {
+  await page.locator('.toolbar-dropdown summary[aria-label="Project"]').click();
+  await page.getByRole("button", { name: "Load demo" }).click();
+}
+
 test("preserves child-parent geometry when moving containers", async ({
   page,
 }) => {
@@ -199,7 +247,7 @@ test("preserves child-parent geometry when moving containers", async ({
 
   await page.goto("/");
   await expect(page.locator(".app-shell")).toBeVisible();
-  await page.getByRole("button", { name: "Demo" }).click();
+  await loadDemo(page);
 
   const canvas = page.locator(".board-canvas");
   await expect(canvas).toBeVisible();
@@ -250,7 +298,7 @@ test("preserves child-parent geometry when moving containers", async ({
 test("pans the board with right-button drag", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".app-shell")).toBeVisible();
-  await page.getByRole("button", { name: "Demo" }).click();
+  await loadDemo(page);
 
   const canvas = page.locator(".board-canvas");
   const canvasBox = await canvas.boundingBox();
@@ -336,7 +384,7 @@ test("updates geometry from inspector and reflows when auto-layout mode changes"
 }) => {
   await page.goto("/");
   await expect(page.locator(".app-shell")).toBeVisible();
-  await page.getByRole("button", { name: "Demo" }).click();
+  await loadDemo(page);
 
   await selectNode(page, "node-3");
 
@@ -370,10 +418,31 @@ test("updates geometry from inspector and reflows when auto-layout mode changes"
     .toBe("16:12");
 });
 
+test("creates an edge from the visible connect action", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".app-shell")).toBeVisible();
+  await loadDemo(page);
+
+  const beforeDocument = await readDocument(page);
+  const initialEdgeCount = Object.keys(beforeDocument.edges ?? {}).length;
+
+  await selectNode(page, "node-3");
+  await addNodeToSelection(page, "node-4");
+
+  await page.getByRole("button", { name: "Connect" }).click();
+
+  await expect
+    .poll(async () => {
+      const document = await readDocument(page);
+      return Object.keys(document.edges ?? {}).length;
+    })
+    .toBe(initialEdgeCount + 1);
+});
+
 test("exports draw.io XML from the toolbar", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".app-shell")).toBeVisible();
-  await page.getByRole("button", { name: "Demo" }).click();
+  await loadDemo(page);
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export Draw.io" }).click();
@@ -381,4 +450,56 @@ test("exports draw.io XML from the toolbar", async ({ page }) => {
   const suggestedName = download.suggestedFilename();
 
   expect(suggestedName).toMatch(/\.drawio$/);
+});
+
+test("creates the first screen from empty state and inserts a quick item", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".app-shell")).toBeVisible();
+  await page.getByRole("button", { name: "New document" }).click();
+
+  await expect(page.getByRole("button", { name: "Add blank screen" })).toBeVisible();
+  await page.getByRole("button", { name: "Add blank screen" }).click();
+
+  const withScreen = await readDocument(page);
+  const screen = Object.values(withScreen.nodes).find((node) => node.type === "screen");
+  expect(screen).toBeDefined();
+
+  await page.locator(".quick-insert-trigger").click();
+  await page.getByRole("button", { name: /Primary CTA/i }).click();
+
+  await expect
+    .poll(async () => {
+      const document = await readDocument(page);
+      return Object.values(document.nodes).filter((node) => node.type === "button").length;
+    })
+    .toBeGreaterThan(0);
+
+  const finalDocument = await readDocument(page);
+  const insertedButton = Object.values(finalDocument.nodes).find(
+    (node) => node.type === "button" && node.parentId === screen?.id,
+  );
+  expect(insertedButton).toBeDefined();
+});
+
+test("inserts a desktop frame from the universal elements catalog", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".app-shell")).toBeVisible();
+  await page.getByRole("button", { name: "New document" }).click();
+
+  await page.getByPlaceholder("Search elements").fill("Desktop frame");
+  await page.getByRole("button", { name: /Desktop frame/i }).last().click();
+
+  const document = await readDocument(page);
+  const desktopFrame = Object.values(document.nodes).find(
+    (node) =>
+      node.type === "screen" &&
+      node.metadata &&
+      node.metadata.frameKind === "desktop",
+  );
+
+  expect(desktopFrame).toBeDefined();
 });

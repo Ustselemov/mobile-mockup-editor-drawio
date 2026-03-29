@@ -18,6 +18,7 @@ export function SelectionOverlay({
   zoom,
   previewRect,
   onHandlePointerDown,
+  onConnectPointerDown,
 }: {
   document: EditorDocument;
   nodeId: string;
@@ -27,6 +28,7 @@ export function SelectionOverlay({
     handle: ResizeHandle,
     event: ReactPointerEvent<SVGRectElement>,
   ) => void;
+  onConnectPointerDown?: (event: ReactPointerEvent<SVGCircleElement>) => void;
 }) {
   const node = document.nodes[nodeId];
   if (!node) {
@@ -40,6 +42,9 @@ export function SelectionOverlay({
   const height = previewRect?.height ?? node.height;
   const strokeWidth = 1.5 / zoom;
   const handleSize = 8 / zoom;
+  const connectorRadius = 8 / zoom;
+  const connectorX = x + width + 16 / zoom;
+  const connectorY = y + height / 2;
 
   return (
     <g className="selection-overlay">
@@ -67,6 +72,25 @@ export function SelectionOverlay({
           onPointerDown={(event) => onHandlePointerDown(handle.key, event)}
         />
       ))}
+      <circle
+        cx={connectorX}
+        cy={connectorY}
+        r={connectorRadius}
+        fill="#ffffff"
+        stroke="#0f766e"
+        strokeWidth={strokeWidth}
+        style={{ cursor: "crosshair" }}
+        onPointerDown={onConnectPointerDown}
+      />
+      <path
+        d={`M ${connectorX - 3 / zoom} ${connectorY - 3 / zoom} L ${connectorX + 3 / zoom} ${connectorY} L ${connectorX - 3 / zoom} ${connectorY + 3 / zoom}`}
+        fill="none"
+        stroke="#0f766e"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        pointerEvents="none"
+      />
     </g>
   );
 }

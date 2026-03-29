@@ -6,6 +6,7 @@ import { useEditorStore } from "@/core/store/editorStore";
 import { getAbsolutePosition } from "@/lib/geometry/coords";
 import type { CenterGuide } from "@/lib/geometry/center-snap";
 import { snapRectToParentCenter } from "@/lib/geometry/center-snap";
+import { snapRectToSiblingGuides } from "@/lib/geometry/sibling-snap";
 import {
   findBestParentForAbsoluteRect,
   getAbsoluteRectForLocalPlacement,
@@ -51,6 +52,14 @@ type Interaction =
       additive: boolean;
       baseSelection: string[];
     }
+  | {
+      mode: "connect";
+      sourceId: string;
+      startX: number;
+      startY: number;
+      currentX: number;
+      currentY: number;
+    }
   | null;
 
 type PreviewRect = {
@@ -64,6 +73,7 @@ type PreviewRect = {
 type GuideOverlay = {
   parentId: ParentId;
   guides: CenterGuide[];
+  badgeLabel?: string;
 };
 
 export type PalettePlacementPreview = {
@@ -143,6 +153,7 @@ export function BoardView({
   const clearSelection = useEditorStore((state) => state.clearSelection);
   const setBoardPan = useEditorStore((state) => state.setBoardPan);
   const setBoardZoom = useEditorStore((state) => state.setBoardZoom);
+  const createEdge = useEditorStore((state) => state.createEdge);
   const setViewportSize = useEditorStore((state) => state.setViewportSize);
   const hoveredDropTarget = useEditorStore((state) => state.hoveredDropTarget);
   const setHoveredDropTarget = useEditorStore((state) => state.setHoveredDropTarget);
@@ -191,7 +202,86 @@ export function BoardView({
     return nextParentId === node.parentId ? null : nextParentId;
   };
 
-  const getMovePreviewWithCenterSnap = (
+  const getSiblingRects = (
+    parentId: ParentId,
+    excludeNodeId: string,
+  ) => {
+    const siblingIds =
+      parentId === "board"
+        ? document.rootIds
+        : isContainerNode(document.nodes[parentId])
+          ? document.nodes[parentId].children
+          : [];
+
+    return siblingIds
+      .filter((siblingId) => siblingId !== excludeNodeId)
+      .map((siblingId) => document.nodes[siblingId])
+      .filter((sibling): sibling is EditorNode => Boolean(sibling) && sibling.visible)
+      .map((sibling) => ({
+        id: sibling.id,
+        x: sibling.x,
+        y: sibling.y,
+        width: sibling.width,
+        height: sibling.height,
+      }));
+  };
+
+  const resolveGuidedRect = (
+    parentId: ParentId,
+    nodeId: string,
+    rect: { x: number; y: number; width: number; height: number },
+  ) => {
+    const threshold = 16 / document.board.zoom;
+    const parentSnap =
+      parentId === "board"
+        ? { rect, guides: [], snappedX: false, snappedY: false }
+        : snapRectToParentCenter(
+            rect,
+            document.nodes[parentId]
+              ? {
+                  width: document.nodes[parentId].width,
+                  height: document.nodes[parentId].height,
+                }
+              : null,
+            threshold,
+          );
+    const siblingSnap = snapRectToSiblingGuides(
+      parentSnap.rect,
+      getSiblingRects(parentId, nodeId),
+      threshold,
+    );
+    const guides = [
+      ...(siblingSnap.snappedX
+        ? siblingSnap.guides.filter((guide) => guide.orientation === "vertical")
+        : parentSnap.guides.filter((guide) => guide.orientation === "vertical")),
+      ...(siblingSnap.snappedY
+        ? siblingSnap.guides.filter((guide) => guide.orientation === "horizontal")
+        : parentSnap.guides.filter((guide) => guide.orientation === "horizontal")),
+    ];
+
+    return {
+      rect: siblingSnap.rect,
+      guideOverlay:
+        guides.length > 0
+          ? {
+              parentId,
+              guides,
+              badgeLabel:
+                siblingSnap.guides.length > 0
+                  ? "Sibling align"
+                  : parentId === "board"
+                    ? undefined
+                    : guides.length === 2
+                      ? "Parent center"
+                      : guides[0]?.orientation === "vertical"
+                        ? "Center X"
+                        : "Center Y",
+            }
+          : null,
+    };
+  };
+
+  const getMovePreviewWithGuides = (
     nodeId: string,
     rect: { x: number; y: number; width: number; height: number },
   ) => {
@@ -213,39 +303,11 @@ export function BoardView({
       };
     }
 
-    if (node.parentId === "board") {
-      return {
-        rect,
-        nextParentId: null,
-        guideOverlay: null,
-      };
-    }
-
-    const parentNode = document.nodes[node.parentId];
-    if (!parentNode) {
-      return {
-        rect,
-        nextParentId: null,
-        guideOverlay: null,
-      };
-    }
-
-    const snapped = snapRectToParentCenter(
-      rect,
-      { width: parentNode.width, height: parentNode.height },
-      16 / document.board.zoom,
-    );
-
+    const guided = resolveGuidedRect(node.parentId, nodeId, rect);
     return {
-      rect: snapped.rect,
+      rect: guided.rect,
       nextParentId: null,
-      guideOverlay:
-        snapped.guides.length > 0
-          ? {
-              parentId: node.parentId,
-              guides: snapped.guides,
-            }
-          : null,
+      guideOverlay: guided.guideOverlay,
     };
   };
 
@@ -349,7 +411,7 @@ export function BoardView({
           width: node.width,
           height: node.height,
         };
-        const snappedPreview = getMovePreviewWithCenterSnap(interaction.nodeId, nextPreviewRect);
+        const snappedPreview = getMovePreviewWithGuides(interaction.nodeId, nextPreviewRect);
         setPreviewRect({
           ...nextPreviewRect,
           x: snappedPreview.rect.x,
@@ -357,6 +419,16 @@ export function BoardView({
         });
         setMoveGuides(snappedPreview.guideOverlay);
         setHoveredDropTarget(snappedPreview.nextParentId ?? null);
+        return;
+      }
+
+      if (interaction.mode === "connect") {
+        const worldPoint = toWorldPoint(event.clientX, event.clientY);
+        setInteraction({
+          ...interaction,
+          currentX: worldPoint.x,
+          currentY: worldPoint.y,
+        });
         return;
       }
 
@@ -401,19 +473,30 @@ export function BoardView({
       }
     };
 
-    const handlePointerUp = () => {
+    const handlePointerUp = (event: PointerEvent) => {
       if (!interaction) {
         return;
       }
 
       if (interaction.mode === "move" && previewRect) {
-        const snappedPreview = getMovePreviewWithCenterSnap(interaction.nodeId, previewRect);
+        const snappedPreview = getMovePreviewWithGuides(interaction.nodeId, previewRect);
         moveNode(
           interaction.nodeId,
           snappedPreview.rect.x,
           snappedPreview.rect.y,
           snappedPreview.nextParentId ?? undefined,
         );
+      }
+
+      if (interaction.mode === "connect") {
+        const targetElement = window.document.elementFromPoint(event.clientX, event.clientY);
+        const targetNodeId = targetElement
+          ?.closest("[data-node-id]")
+          ?.getAttribute("data-node-id");
+
+        if (targetNodeId && targetNodeId !== interaction.sourceId) {
+          createEdge(interaction.sourceId, targetNodeId);
+        }
       }
 
       if (interaction.mode === "resize" && previewRect) {
@@ -470,6 +553,7 @@ export function BoardView({
     moveNode,
     previewRect,
     resizeNode,
+    createEdge,
     setBoardPan,
     setHoveredDropTarget,
     setSelection,
@@ -622,9 +706,61 @@ export function BoardView({
         guides: palettePreview.guides,
       }
     : moveGuides;
+  const palettePreviewAbsolute =
+    palettePreview
+      ? (() => {
+          const parentAbsolute =
+            palettePreview.parentId === "board"
+              ? { x: 0, y: 0 }
+              : getAbsolutePosition(document, palettePreview.parentId);
+          return {
+            x: parentAbsolute.x + palettePreview.x,
+            y: parentAbsolute.y + palettePreview.y,
+          };
+        })()
+      : null;
   const guideBadge =
     document.board.guides && guideOverlay
       ? (() => {
+          if (guideOverlay.badgeLabel) {
+            const previewAbsolute =
+              palettePreview && palettePreviewAbsolute
+                ? {
+                    x: palettePreviewAbsolute.x,
+                    y: palettePreviewAbsolute.y,
+                    width: palettePreview.width,
+                    height: palettePreview.height,
+                  }
+                : previewRect
+                  ? (() => {
+                      const node = document.nodes[previewRect.nodeId];
+                      if (!node) {
+                        return null;
+                      }
+
+                      const parentAbsolute =
+                        node.parentId === "board"
+                          ? { x: 0, y: 0 }
+                          : getAbsolutePosition(document, node.parentId);
+                      return {
+                        x: parentAbsolute.x + previewRect.x,
+                        y: parentAbsolute.y + previewRect.y,
+                        width: previewRect.width,
+                        height: previewRect.height,
+                      };
+                    })()
+                  : null;
+            if (!previewAbsolute) {
+              return null;
+            }
+
+            return {
+              x: previewAbsolute.x + previewAbsolute.width / 2,
+              y: previewAbsolute.y - 12,
+              label: guideOverlay.badgeLabel,
+            } satisfies GuideBadge;
+          }
+
           if (guideOverlay.parentId === "board") {
             return null;
           }
@@ -648,19 +784,6 @@ export function BoardView({
           } satisfies GuideBadge;
         })()
       : null;
-  const palettePreviewAbsolute =
-    palettePreview
-      ? (() => {
-          const parentAbsolute =
-            palettePreview.parentId === "board"
-              ? { x: 0, y: 0 }
-              : getAbsolutePosition(document, palettePreview.parentId);
-          return {
-            x: parentAbsolute.x + palettePreview.x,
-            y: parentAbsolute.y + palettePreview.y,
-          };
-        })()
-      : null;
   const editingOverlay = editingNode && isInlineEditableNode(editingNode)
     ? (() => {
         const absolute = getAbsolutePosition(document, editingNode.id);
@@ -679,6 +802,13 @@ export function BoardView({
         };
       })()
     : null;
+  const connectPreviewPath =
+    interaction?.mode === "connect"
+      ? (() => {
+          const midX = interaction.startX + (interaction.currentX - interaction.startX) / 2;
+          return `M ${interaction.startX} ${interaction.startY} L ${midX} ${interaction.startY} L ${midX} ${interaction.currentY} L ${interaction.currentX} ${interaction.currentY}`;
+        })()
+      : null;
 
   return (
     <div className="board-view">
@@ -741,6 +871,16 @@ export function BoardView({
                 />
               );
             })}
+            {connectPreviewPath ? (
+              <path
+                d={connectPreviewPath}
+                fill="none"
+                stroke="#0f766e"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                markerEnd="url(#arrowhead)"
+              />
+            ) : null}
             <defs>
               <marker
                 id="arrowhead"
@@ -873,6 +1013,18 @@ export function BoardView({
                     : undefined
                 }
                 onHandlePointerDown={onHandlePointerDown}
+                onConnectPointerDown={(event) => {
+                  event.stopPropagation();
+                  const absolute = getAbsolutePosition(document, selectedNode.id);
+                  setInteraction({
+                    mode: "connect",
+                    sourceId: selectedNode.id,
+                    startX: absolute.x + selectedNode.width,
+                    startY: absolute.y + selectedNode.height / 2,
+                    currentX: absolute.x + selectedNode.width,
+                    currentY: absolute.y + selectedNode.height / 2,
+                  });
+                }}
               />
             ) : null}
           </g>

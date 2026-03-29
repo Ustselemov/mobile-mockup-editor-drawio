@@ -11,6 +11,7 @@ AI-generated code and documentation may contain errors, omissions, or incorrect 
 - SVG board with zoom, right/middle mouse pan, `Space + drag`, grid toggle, snap, marquee, fit actions, and center guides
 - strict parent-child hierarchy with local coordinates, clamping, reparenting, and nested container movement
 - palette, layers tree, inspector, status bar, validation summary, JSON/XML debug views
+- MVP4 shell pass: visual library modes, right-side inspector/layers split, board empty state, quick insert, contextual toolbar, and minimap
 - multi-select, align/distribute, clipboard duplicate/paste, undo/redo
 - lock/hide/order controls in the layers tree and inspector
 - JSON save/load, local save/load, Draw.io import/export, unsupported token reporting
@@ -59,6 +60,13 @@ After that, every push to `main` deploys the production bundle to:
 
 ## Key documentation
 
+- [Next Versions Hub](./docs/next%20versions/index.md)
+- [V5 Scope And Supported Artifacts](./docs/01-scope-and-supported-artifacts.md)
+- [V5 Gap Analysis](./docs/10-mvp5-gap-analysis.md)
+- [V5 QA Checklist](./docs/16-qa-checklist.md)
+- [MVP4 UX Audit Packet](./docs/ux-audit/01-current-ui-inventory.md)
+- [Hard UX UI Review 2026-03-29](./docs/ux-audit/08-hard-review-2026-03-29.md)
+- [MVP4 UX Redesign Docs](./docs/ux/ui-review.md)
 - [MVP1 Audit Final Report](./docs/audit/mvp1_final_acceptance_report.md)
 - [MVP2 Architecture](./docs/mvp2/architecture.md)
 - [MVP3 Current State Audit](./docs/analysis/current-state-audit.md)
@@ -73,10 +81,12 @@ After that, every push to `main` deploys the production bundle to:
 
 - no variants engine or batch generation yet
 - current runtime DSL subset is smaller than the full MVP3 component grammar
-- current left/right sidebars and toolbar are still narrower than the full MVP3 control surface
+- inspector still needs richer grouped controls and fewer raw text/number inputs
+- top bar still carries more reading load than the target MVP4 shell
 - current document model is editor-centric and not yet the full MVP3 `ProjectModel`
+- current V5 universal model is metadata-driven and not yet a full page-based universal document model
 - current Draw.io subset is narrower than the full MVP3 target, including no dedicated `CommentCloud` / `shape=cloud` node model yet
-- no minimap
+- no SVG/PNG export yet
 - no visual regression baseline bundle
 - supported component catalog is narrower than the full MVP3 target set
 - current template-pack library is representative, but still far smaller than the full MVP3 template volume target

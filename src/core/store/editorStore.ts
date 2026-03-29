@@ -27,6 +27,7 @@ import type {
   ParentId,
 } from "@/lib/model/document";
 import { clampRectToBounds } from "@/lib/geometry/bounds";
+import { pushRectOutsideSiblings } from "@/lib/geometry/collision";
 import { alignRects, distributeRects } from "@/lib/geometry/arrange";
 import { reflowLayoutChain } from "@/lib/layout/reflow";
 import {
@@ -406,6 +407,48 @@ function getSiblingIds(document: EditorDocument, parentId: ParentId): NodeId[] {
   return isContainerNode(parent) ? [...parent.children] : [];
 }
 
+function isAbsolutePlacementParent(
+  document: EditorDocument,
+  parentId: ParentId,
+): boolean {
+  if (parentId === "board") {
+    return true;
+  }
+
+  const parent = document.nodes[parentId];
+  return isContainerNode(parent) ? (parent.layout?.mode ?? "absolute") === "absolute" : true;
+}
+
+function resolveCollisionFreeRect(
+  document: EditorDocument,
+  parentId: ParentId,
+  nodeId: NodeId,
+  rect: { x: number; y: number; width: number; height: number },
+): { x: number; y: number; width: number; height: number } {
+  if (!isAbsolutePlacementParent(document, parentId)) {
+    return rect;
+  }
+
+  const siblingRects = getSiblingIds(document, parentId)
+    .filter((siblingId) => siblingId !== nodeId)
+    .map((siblingId) => document.nodes[siblingId])
+    .filter((sibling): sibling is EditorNode => Boolean(sibling) && sibling.visible)
+    .map((sibling) => ({
+      id: sibling.id,
+      x: sibling.x,
+      y: sibling.y,
+      width: sibling.width,
+      height: sibling.height,
+    }));
+
+  return pushRectOutsideSiblings(
+    rect,
+    siblingRects,
+    getParentBounds(document, parentId),
+    document.board.snapToGrid ? document.board.gridSize : 6,
+  ).rect;
+}
+
 function getSharedParentId(
   document: EditorDocument,
   selection: NodeId[],
@@ -664,8 +707,18 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
         createNodeFromPalette(type, id, parentId, position),
         { preferredParentId: parentId },
       );
-      appendNode(draft, normalizeNodeForParent(draft, node));
-      reflowLayoutChain(draft, node.parentId);
+      const normalizedNode = normalizeNodeForParent(draft, node);
+      const collisionFreeRect = resolveCollisionFreeRect(draft, normalizedNode.parentId, normalizedNode.id, {
+        x: normalizedNode.x,
+        y: normalizedNode.y,
+        width: normalizedNode.width,
+        height: normalizedNode.height,
+      });
+      appendNode(draft, {
+        ...normalizedNode,
+        ...collisionFreeRect,
+      });
+      reflowLayoutChain(draft, normalizedNode.parentId);
       createdId = id;
     });
 
@@ -721,21 +774,38 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
           x: absoluteRect.x,
           y: absoluteRect.y,
         });
-        appendNode(
+        const normalizedNode = normalizeNodeForParent(draft, {
+          ...node,
+          parentId: nextParentId,
+          x: nextLocal.x,
+          y: nextLocal.y,
+        });
+        const collisionFreeRect = resolveCollisionFreeRect(
           draft,
-          normalizeNodeForParent(draft, {
-            ...node,
-            parentId: nextParentId,
-            x: nextLocal.x,
-            y: nextLocal.y,
-          }),
+          nextParentId,
+          nodeId,
+          normalizedNode,
         );
+        appendNode(draft, {
+          ...normalizedNode,
+          ...collisionFreeRect,
+        });
         reflowLayoutChain(draft, previousParentId);
         reflowLayoutChain(draft, nextParentId);
         return;
       }
 
-      draft.nodes[nodeId] = normalizeNodeForParent(draft, { ...node, x, y });
+      const normalizedNode = normalizeNodeForParent(draft, { ...node, x, y });
+      const collisionFreeRect = resolveCollisionFreeRect(
+        draft,
+        node.parentId,
+        nodeId,
+        normalizedNode,
+      );
+      draft.nodes[nodeId] = {
+        ...normalizedNode,
+        ...collisionFreeRect,
+      };
       reflowLayoutChain(draft, previousParentId);
     });
   },
@@ -926,7 +996,17 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
       current.parentId = nextParentId;
       current.x = nextLocal.x;
       current.y = nextLocal.y;
-      appendNode(draft, normalizeNodeForParent(draft, current));
+      const normalizedNode = normalizeNodeForParent(draft, current);
+      const collisionFreeRect = resolveCollisionFreeRect(
+        draft,
+        nextParentId,
+        nodeId,
+        normalizedNode,
+      );
+      appendNode(draft, {
+        ...normalizedNode,
+        ...collisionFreeRect,
+      });
       reflowLayoutChain(draft, previousParentId);
       reflowLayoutChain(draft, nextParentId);
     });

@@ -66,6 +66,11 @@ function applyPreview(node: EditorNode, previewRect?: PreviewRect): EditorNode {
   };
 }
 
+function getMetadataString(node: EditorNode, key: string): string | undefined {
+  const value = node.metadata?.[key];
+  return typeof value === "string" ? value : undefined;
+}
+
 function RenderNodeInner({
   document,
   node,
@@ -423,6 +428,8 @@ function RenderNodeInner({
 
   if (current.type === "screen" || current.type === "container") {
     const clipId = `clip-${current.id}`;
+    const frameKind = current.type === "screen" ? getMetadataString(current, "frameKind") : undefined;
+    const shapeVariant = current.type === "container" ? getMetadataString(current, "shapeVariant") : undefined;
     return (
       <g
         data-node-id={current.id}
@@ -432,35 +439,163 @@ function RenderNodeInner({
         onPointerDown={(event) => onNodePointerDown(current.id, event)}
       >
         {current.type === "screen" ? (
-          <>
-            <text x={current.width / 2} y={-10} fontSize={14} fontWeight={700} fill="#1f2b2d" textAnchor="middle">
-              {current.title}
-            </text>
-            <rect
-              width={current.width}
-              height={current.height}
-              rx={current.borderRadius ?? 14}
-              fill={current.fillColor ?? "#ffffff"}
-              stroke={current.strokeColor ?? "#1c2a30"}
-              strokeWidth={current.strokeWidth ?? 2}
-            />
-          </>
-        ) : (
-          <>
-            <rect
-              width={current.width}
-              height={current.height}
-              rx={current.borderRadius ?? 10}
-              fill={current.fillColor ?? "#f7fafb"}
-              stroke={current.strokeColor ?? "#d7e1e3"}
-              strokeWidth={current.strokeWidth ?? 1}
-            />
-            {current.title ? (
-              <text x={16} y={20} fontSize={10} fontWeight={700} fill="#66757a">
+          frameKind === "desktop" ? (
+            <>
+              <text x={0} y={-10} fontSize={14} fontWeight={700} fill="#1f2b2d">
                 {current.title}
               </text>
-            ) : null}
-          </>
+              <rect
+                width={current.width}
+                height={current.height}
+                rx={current.borderRadius ?? 18}
+                fill={current.fillColor ?? "#ffffff"}
+                stroke={current.strokeColor ?? "#1c2a30"}
+                strokeWidth={current.strokeWidth ?? 2}
+              />
+              <rect width={current.width} height={38} rx={current.borderRadius ?? 18} fill="#eef3f2" stroke="#d7e1e3" strokeWidth={1} />
+              <circle cx={22} cy={19} r={5} fill="#f87171" />
+              <circle cx={38} cy={19} r={5} fill="#fbbf24" />
+              <circle cx={54} cy={19} r={5} fill="#34d399" />
+              <rect x={92} y={11} width={Math.max(160, current.width - 120)} height={16} rx={8} fill="#ffffff" stroke="#d7e1e3" strokeWidth={1} />
+            </>
+          ) : frameKind === "generic" ? (
+            <>
+              <text x={0} y={-10} fontSize={14} fontWeight={700} fill="#1f2b2d">
+                {current.title}
+              </text>
+              <rect
+                width={current.width}
+                height={current.height}
+                rx={current.borderRadius ?? 18}
+                fill={current.fillColor ?? "#fbfdfd"}
+                stroke={current.strokeColor ?? "#66757a"}
+                strokeWidth={current.strokeWidth ?? 2}
+                strokeDasharray="8 4"
+              />
+              <rect x={18} y={18} width={132} height={22} rx={11} fill="#ffffff" stroke="#d7e1e3" strokeWidth={1} />
+              <text x={30} y={33} fontSize={10} fontWeight={700} fill="#476065">
+                {current.title}
+              </text>
+            </>
+          ) : (
+            <>
+              <text x={current.width / 2} y={-10} fontSize={14} fontWeight={700} fill="#1f2b2d" textAnchor="middle">
+                {current.title}
+              </text>
+              <rect
+                width={current.width}
+                height={current.height}
+                rx={current.borderRadius ?? 14}
+                fill={current.fillColor ?? "#ffffff"}
+                stroke={current.strokeColor ?? "#1c2a30"}
+                strokeWidth={current.strokeWidth ?? 2}
+              />
+            </>
+          )
+        ) : (
+          shapeVariant === "diamond" ? (
+            <>
+              <polygon
+                points={`${current.width / 2},0 ${current.width},${current.height / 2} ${current.width / 2},${current.height} 0,${current.height / 2}`}
+                fill={current.fillColor ?? "#f7fafb"}
+                stroke={current.strokeColor ?? "#d7e1e3"}
+                strokeWidth={current.strokeWidth ?? 1}
+              />
+              {current.title ? (
+                <text x={current.width / 2} y={current.height / 2 + 4} fontSize={11} fontWeight={700} fill="#355070" textAnchor="middle">
+                  {current.title}
+                </text>
+              ) : null}
+            </>
+          ) : shapeVariant === "circle" ? (
+            <>
+              <ellipse
+                cx={current.width / 2}
+                cy={current.height / 2}
+                rx={current.width / 2}
+                ry={current.height / 2}
+                fill={current.fillColor ?? "#f7fafb"}
+                stroke={current.strokeColor ?? "#d7e1e3"}
+                strokeWidth={current.strokeWidth ?? 1}
+              />
+              {current.title ? (
+                <text x={current.width / 2} y={current.height / 2 + 4} fontSize={11} fontWeight={700} fill="#476065" textAnchor="middle">
+                  {current.title}
+                </text>
+              ) : null}
+            </>
+          ) : shapeVariant === "database" ? (
+            <>
+              <ellipse cx={current.width / 2} cy={12} rx={current.width / 2} ry={12} fill={current.fillColor ?? "#fdf5e8"} stroke={current.strokeColor ?? "#d79b00"} strokeWidth={current.strokeWidth ?? 1} />
+              <path d={`M 0 12 V ${current.height - 12} A ${current.width / 2} 12 0 0 0 ${current.width} ${current.height - 12} V 12`} fill={current.fillColor ?? "#fdf5e8"} stroke={current.strokeColor ?? "#d79b00"} strokeWidth={current.strokeWidth ?? 1} />
+              <ellipse cx={current.width / 2} cy={current.height - 12} rx={current.width / 2} ry={12} fill={current.fillColor ?? "#fdf5e8"} stroke={current.strokeColor ?? "#d79b00"} strokeWidth={current.strokeWidth ?? 1} />
+              {current.title ? (
+                <text x={current.width / 2} y={current.height / 2 + 4} fontSize={11} fontWeight={700} fill="#7d5d17" textAnchor="middle">
+                  {current.title}
+                </text>
+              ) : null}
+            </>
+          ) : shapeVariant === "sticky" ? (
+            <>
+              <path d={`M 0 0 H ${current.width - 22} L ${current.width} 22 V ${current.height} H 0 Z`} fill={current.fillColor ?? "#fff6b8"} stroke={current.strokeColor ?? "#d6b656"} strokeWidth={current.strokeWidth ?? 1} />
+              <path d={`M ${current.width - 22} 0 V 22 H ${current.width}`} fill="rgba(255,255,255,0.42)" stroke={current.strokeColor ?? "#d6b656"} strokeWidth={current.strokeWidth ?? 1} />
+              {current.title ? (
+                <text x={16} y={22} fontSize={11} fontWeight={700} fill="#6f4b18">
+                  {current.title}
+                </text>
+              ) : null}
+            </>
+          ) : shapeVariant === "terminator" ? (
+            <>
+              <rect
+                width={current.width}
+                height={current.height}
+                rx={Math.min(current.height / 2, current.borderRadius ?? current.height / 2)}
+                fill={current.fillColor ?? "#f7fafb"}
+                stroke={current.strokeColor ?? "#d7e1e3"}
+                strokeWidth={current.strokeWidth ?? 1}
+              />
+              {current.title ? (
+                <text x={current.width / 2} y={current.height / 2 + 4} fontSize={11} fontWeight={700} fill="#476065" textAnchor="middle">
+                  {current.title}
+                </text>
+              ) : null}
+            </>
+          ) : shapeVariant === "service" || shapeVariant === "api" || shapeVariant === "treeNode" || shapeVariant === "process" ? (
+            <>
+              <rect
+                width={current.width}
+                height={current.height}
+                rx={shapeVariant === "treeNode" ? 20 : current.borderRadius ?? 12}
+                fill={current.fillColor ?? "#f7fafb"}
+                stroke={current.strokeColor ?? "#d7e1e3"}
+                strokeWidth={current.strokeWidth ?? 1}
+              />
+              {shapeVariant === "service" ? <rect x={0} y={0} width={current.width} height={18} rx={12} fill="rgba(108,142,191,0.12)" /> : null}
+              {shapeVariant === "api" ? <rect x={0} y={0} width={current.width} height={18} rx={12} fill="rgba(15,118,110,0.12)" /> : null}
+              {current.title ? (
+                <text x={current.width / 2} y={shapeVariant === "service" || shapeVariant === "api" ? current.height / 2 + 10 : current.height / 2 + 4} fontSize={11} fontWeight={700} fill="#476065" textAnchor="middle">
+                  {current.title}
+                </text>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <rect
+                width={current.width}
+                height={current.height}
+                rx={current.borderRadius ?? 10}
+                fill={current.fillColor ?? "#f7fafb"}
+                stroke={current.strokeColor ?? "#d7e1e3"}
+                strokeWidth={current.strokeWidth ?? 1}
+              />
+              {current.title ? (
+                <text x={16} y={20} fontSize={10} fontWeight={700} fill="#66757a">
+                  {current.title}
+                </text>
+              ) : null}
+            </>
+          )
         )}
         <defs>
           <clipPath id={clipId}>
